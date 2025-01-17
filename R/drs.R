@@ -11,19 +11,27 @@
     name = character()
 )
 
-#' @importFrom httr POST add_headers
-.drs_res_service <- function(drs_url, service_url, fields, token) {
-    headers <- add_headers(
-        Authorization = paste("Bearer", token),
-        "content-type" = "application/json"
-    )
-    body <- list(fields = fields, url = jsonlite::unbox(drs_url))
-    body_json <- jsonlite::toJSON(body)
-    response <- POST(service_url, headers, body = body_json, encode="raw")
-    avstop_for_status(response, "DRS resolution")
+#' @importFrom httr2 request req_template req_headers req_auth_bearer_token
+#'   req_body_json req_method req_perform resp_body_json
+.drs_res_service <- function(drs_url, fields, token) {
+    response <- request(.DRS_HUB) |>
+        req_template("/api/v4/drs/resolve") |>
+        req_headers(
+            `Content-Type` = "application/json"
+        ) |>
+        req_auth_bearer_token(token) |>
+        req_body_json(
+            list(
+                fields = fields,
+                url = jsonlite::unbox(drs_url)
+            )
+        ) |>
+        req_method("POST") |>
+        req_perform() |>
+        resp_body_json()
 
     ## add drs field to response
-    lst <- c(as.list(response), list(drs = drs_url))
+    lst <- c(response, list(drs = drs_url))
 
     ## unbox accessUrl; if accessUrl == NULL, then this is a no-op
     lst$accessUrl <- unlist(lst$accessUrl, use.names = FALSE)
@@ -80,13 +88,11 @@
 #' @export
 drs_hub <- function(source = character()) {
     access_token <- gcloud_access_token("drs")
-    service_url <- paste0(.DRS_HUB, "/api/v4/drs/resolve")
 
     Map(
         .drs_res_service,
         source,
         MoreArgs = list(
-            service_url = service_url,
             fields = .DRS_REQ_FIELDS,
             token = access_token
         )
