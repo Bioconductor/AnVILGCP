@@ -76,7 +76,7 @@
     lst <- c(as.list(response), list(drs = drs_url))
 
     ## unbox accessUrl; if accessUrl == NULL, then this is a no-op
-    lst$accessUrl <- unlist(lst$accessUrl, use.names = FALSE)
+    lst[["accessUrl"]] <- unlist(lst[["accessUrl"]], use.names = FALSE)
 
     ## nest list elements so length == 1L
     is_list <-
