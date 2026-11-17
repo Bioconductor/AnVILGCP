@@ -58,4 +58,4 @@ Collate:
     'has_avworkspace-methods.R'
     'localize.R'
     'utilities.R'
-Config/roxygen2/version: 8.0.0
+Config/roxygen2/version: 8.1.1

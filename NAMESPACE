@@ -64,72 +64,88 @@ exportMethods(avworkspace_namespace)
 exportMethods(avworkspaces)
 exportMethods(has_avworkspace)
 importClassesFrom(AnVILBase,Platform)
-importFrom(AnVILBase,avbackup)
-importFrom(AnVILBase,avcopy)
-importFrom(AnVILBase,avlist)
-importFrom(AnVILBase,avnotebooks)
-importFrom(AnVILBase,avnotebooks_delocalize)
-importFrom(AnVILBase,avnotebooks_localize)
-importFrom(AnVILBase,avremove)
-importFrom(AnVILBase,avrestore)
-importFrom(AnVILBase,avstop_for_status)
-importFrom(AnVILBase,avstorage)
-importFrom(AnVILBase,avtable)
-importFrom(AnVILBase,avtable_delete)
-importFrom(AnVILBase,avtable_delete_values)
-importFrom(AnVILBase,avtable_import)
-importFrom(AnVILBase,avtable_import_set)
-importFrom(AnVILBase,avtables)
-importFrom(AnVILBase,avworkflow_jobs)
-importFrom(AnVILBase,avworkspace)
-importFrom(AnVILBase,avworkspace_clone)
-importFrom(AnVILBase,avworkspace_name)
-importFrom(AnVILBase,avworkspace_namespace)
-importFrom(AnVILBase,avworkspaces)
-importFrom(AnVILBase,cloud_platform)
-importFrom(AnVILBase,flatten)
-importFrom(AnVILBase,has_avworkspace)
-importFrom(BiocBaseUtils,checkInstalled)
-importFrom(BiocBaseUtils,isCharacter)
-importFrom(BiocBaseUtils,isScalarCharacter)
-importFrom(BiocBaseUtils,isScalarInteger)
-importFrom(BiocBaseUtils,isScalarLogical)
-importFrom(BiocBaseUtils,isScalarNumber)
-importFrom(BiocBaseUtils,isZeroOneCharacter)
-importFrom(BiocBaseUtils,lifeCycle)
-importFrom(dplyr,across)
-importFrom(dplyr,arrange)
-importFrom(dplyr,bind_cols)
-importFrom(dplyr,bind_rows)
-importFrom(dplyr,desc)
-importFrom(dplyr,distinct)
-importFrom(dplyr,ends_with)
-importFrom(dplyr,filter)
-importFrom(dplyr,full_join)
-importFrom(dplyr,left_join)
-importFrom(dplyr,mutate)
-importFrom(dplyr,pull)
-importFrom(dplyr,rename_with)
-importFrom(dplyr,select)
-importFrom(dplyr,starts_with)
-importFrom(dplyr,where)
-importFrom(httr,POST)
-importFrom(httr,add_headers)
-importFrom(httr,content)
-importFrom(httr,status_code)
+importFrom(AnVILBase,
+  avbackup,
+  avcopy,
+  avlist,
+  avnotebooks,
+  avnotebooks_delocalize,
+  avnotebooks_localize,
+  avremove,
+  avrestore,
+  avstop_for_status,
+  avstorage,
+  avtable,
+  avtable_delete,
+  avtable_delete_values,
+  avtable_import,
+  avtable_import_set,
+  avtables,
+  avworkflow_jobs,
+  avworkspace,
+  avworkspace_clone,
+  avworkspace_name,
+  avworkspace_namespace,
+  avworkspaces,
+  cloud_platform,
+  flatten,
+  has_avworkspace
+)
+importFrom(BiocBaseUtils,
+  checkInstalled,
+  isCharacter,
+  isScalarCharacter,
+  isScalarInteger,
+  isScalarLogical,
+  isScalarNumber,
+  isZeroOneCharacter,
+  lifeCycle
+)
+importFrom(dplyr,
+  across,
+  arrange,
+  bind_cols,
+  bind_rows,
+  desc,
+  distinct,
+  ends_with,
+  filter,
+  full_join,
+  left_join,
+  mutate,
+  pull,
+  rename_with,
+  select,
+  starts_with,
+  where
+)
+importFrom(httr,
+  POST,
+  add_headers,
+  content,
+  status_code
+)
 importFrom(jsonlite,unbox)
-importFrom(methods,is)
-importFrom(methods,new)
-importFrom(rlang,.data)
-importFrom(rlang,.env)
+importFrom(methods,
+  is,
+  new
+)
+importFrom(rlang,
+  .data,
+  .env
+)
 importFrom(stats,setNames)
-importFrom(tibble,as_tibble)
-importFrom(tibble,is_tibble)
-importFrom(tibble,tibble)
+importFrom(tibble,
+  as_tibble,
+  is_tibble,
+  tibble
+)
 importFrom(tidyr,pivot_wider)
-importFrom(utils,URLencode)
-importFrom(utils,capture.output)
-importFrom(utils,head)
-importFrom(utils,setTxtProgressBar)
-importFrom(utils,txtProgressBar)
-importFrom(utils,write.table)
+importFrom(utils,
+  URLencode,
+  capture.output,
+  head,
+  setTxtProgressBar,
+  txtProgressBar,
+  write.table
+)
