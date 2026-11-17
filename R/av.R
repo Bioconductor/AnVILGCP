@@ -130,10 +130,25 @@ avtable_paged <-
         mutate(across(where(is.character), na_fun))
 }
 
+## Terra reports an upsert in which no entity changed (e.g., re-importing
+## identical values) as status 'Error' with this message; used to add a
+## hint to the warning, not to change the reported status
+.avtable_import_is_noop <-
+    function(message)
+{
+    !is.na(message) &&
+        grepl("All entities failed to update", message, fixed = TRUE) &&
+        grepl("There were 0 errors in total", message, fixed = TRUE)
+}
+
 #' @rdname av
 #'
 #' @description `avtable_import_status()` queries for the status of an
-#'     'asynchronous' table import.
+#'     'asynchronous' table import. Failed jobs generate a warning and
+#'     have status `"Error"`. Terra reports re-importing values identical
+#'     to the existing table as an `"Error"` ('All entities failed to
+#'     update. There were 0 errors in total.'); the warning notes that the
+#'     table is likely unchanged.
 #'
 #' @param job_status tibble() of job identifiers, returned by
 #'     `avtable_import()` and `avtable_import_set()`.
@@ -153,7 +168,7 @@ avtable_import_status <-
         isScalarCharacter(name)
     )
 
-    todo <- !job_status$status %in% c("Done", "Failed")
+    todo <- !job_status$status %in% c("Done", "Failed", "Error")
     job_ids <- job_status$job_id[todo]
     n_jobs <- length(job_ids)
     updated_status <- rep(NA_character_, n_jobs)
@@ -182,11 +197,20 @@ avtable_import_status <-
             } else {
                 updated_message[[job_index]] <- NA_character_
             }
-            if (identical(tolower(content$status),  "error"))
+            if (identical(tolower(content$status), "error")) {
+                hint <- if (
+                    .avtable_import_is_noop(updated_message[[job_index]])
+                )
+                    paste0(
+                        "\n  (Terra reports this when all imported values ",
+                        "are identical to the existing table;\n  the ",
+                        "table is likely unchanged)"
+                    )
                 stop(
                     "job failed with status: ",
-                    updated_message[[job_index]], call. = FALSE
+                    updated_message[[job_index]], hint, call. = FALSE
                 )
+            }
         }, error = function(err) {
             err_msg <- conditionMessage(err)
             is_err_status <- grepl("job failed with status", err_msg)

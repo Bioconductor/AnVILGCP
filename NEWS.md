@@ -1,3 +1,12 @@
+## Changes in version 1.8.0
+
+### Bug fixes and minor improvements
+
+* `avtable_import_status()` warnings explain that Terra reports
+  re-importing values identical to the existing table as an `"Error"`
+  ('All entities failed to update. There were 0 errors in total.')
+* `avtable_import_status()` no longer re-queries jobs with status `"Error"`
+
 ## Changes in version 1.6.0
 
 ### Deprecated and defunct

@@ -192,7 +192,11 @@ the return value of \code{avruntimes()}.
 }
 \description{
 \code{avtable_import_status()} queries for the status of an
-'asynchronous' table import.
+'asynchronous' table import. Failed jobs generate a warning and
+have status \code{"Error"}. Terra reports re-importing values identical
+to the existing table as an \code{"Error"} ('All entities failed to
+update. There were 0 errors in total.'); the warning notes that the
+table is likely unchanged.
 
 \code{avfiles_ls()} returns the paths of files in the
 workspace bucket.  \code{avfiles_backup()} copies files from the

@@ -207,6 +207,12 @@ argument. If many pages fail to import, a strategy might be to
 provide an explicit \code{pageSize} less than the automatically
 determined size.
 
+Re-importing values identical to those already in the
+table (no entity changes) is reported by Terra as a failed job;
+\code{avtable_import_status()} shows status \code{"Error"} with message
+'All entities failed to update. There were 0 errors in total.'
+The existing table is unchanged.
+
 \code{avtable_import_set()} creates new rows in a table
 \verb{<origin>_set}. One row will be created for each distinct value
 in the column identified by \code{set}. Each row entry has a

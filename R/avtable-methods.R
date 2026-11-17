@@ -382,6 +382,12 @@ setMethod("avtable", signature = c(platform = "gcp"), definition =
 #'     provide an explicit `pageSize` less than the automatically
 #'     determined size.
 #'
+#' @details Re-importing values identical to those already in the
+#'     table (no entity changes) is reported by Terra as a failed job;
+#'     `avtable_import_status()` shows status `"Error"` with message
+#'     'All entities failed to update. There were 0 errors in total.'
+#'     The existing table is unchanged.
+#'
 #' @importFrom AnVILBase avtable_import
 #' @exportMethod avtable_import
 setMethod(
