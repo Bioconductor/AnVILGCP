@@ -50,15 +50,27 @@
 }
 
 #' @importFrom httr POST add_headers
-.drs_hub_service <- function(drs_url, service_url, fields, token) {
+.drs_hub_service <-
+    function(drs_url, service_url, fields, token, user_project = NULL)
+{
     headers <- add_headers(
         Authorization = paste("Bearer", token),
         "content-type" = "application/json"
     )
     body <- list(fields = fields, url = jsonlite::unbox(drs_url))
+    ## requester pays: Google project billed for access to the signed URL;
+    ## only required by TDR snapshots with 'requireUserProject' enabled
+    op <- "DRS HUB resolution"
+    if (!is.null(user_project) && nzchar(user_project))
+        body[["userProject"]] <- jsonlite::unbox(user_project)
+    else
+        op <- paste0(
+            op, " (no 'user_project' set; data requiring a Google ",
+            "project for requester pays will fail)"
+        )
     body_json <- jsonlite::toJSON(body)
     response <- POST(service_url, headers, body = body_json, encode="raw")
-    avstop_for_status(response, "DRS HUB resolution")
+    avstop_for_status(response, op)
 
     ## add drs field to response
     lst <- c(as.list(response), list(drs = drs_url))
@@ -100,6 +112,15 @@
 #' @param source `character()` DRS URLs (beginning with 'drs://') to resources
 #'   managed by the DRS Hub server (`drs_hub()`).
 #'
+#' @param user_project `character(1)` Google project billed for access to
+#'   requester-pays data, sent to DRS Hub as `userProject`. Resolution fails
+#'   without it for AnVIL TDR snapshots with `requireUserProject` enabled;
+#'   other DRS objects resolve without it. Defaults to the `GOOGLE_PROJECT`
+#'   environment variable (set in Terra workspaces) or, failing that,
+#'   `gcloud_project()`; when neither is available, `userProject` is omitted
+#'   from the request.
+#'
+#'
 #' @return `drs_hub()` returns a tbl with the following columns:
 #'
 #' - `drs`: `character()` DRS URIs
@@ -133,7 +154,11 @@
 #'     drs_nci_crdc(drs_nci)
 #' }
 #' @export
-drs_hub <- function(source = character()) {
+drs_hub <- function(source = character(), user_project = .drs_user_project()) {
+    stopifnot(
+        is.character(user_project), length(user_project) == 1L,
+        !is.na(user_project)
+    )
     access_token <- GCPtools::gcloud_access_token("drs")
     Map(
         .drs_hub_service,
@@ -141,11 +166,23 @@ drs_hub <- function(source = character()) {
         MoreArgs = list(
             service_url = .hub_service_url(),
             fields = .DRS_REQ_FIELDS,
-            token = access_token
+            token = access_token,
+            user_project = user_project
         )
     ) |>
         do.call(rbind.data.frame, args = _) |>
         .tbl_with_template(.DRS_HUB_TEMPLATE)
+}
+
+## Google project billed for requester-pays DRS access; on Terra this is
+## the workspace's GOOGLE_PROJECT, otherwise fall back to gcloud's project
+.drs_user_project <- function() {
+    project <- Sys.getenv("GOOGLE_PROJECT")
+    if (!nzchar(project))
+        project <- tryCatch(
+            GCPtools::gcloud_project(), error = function(e) ""
+        )
+    project
 }
 
 .hub_service_url <- function(hub = .DRS_HUB) {
