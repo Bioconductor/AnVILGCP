@@ -95,7 +95,7 @@ workspaces on AnVIL.}
 \item{table}{character(1) table name as returned by, e.g., \code{avtables()}.}
 
 \item{na}{in \code{avtable()} and \code{avtable_paged()}, character() of
-strings to be interpretted as missing values. In
+strings to be interpreted as missing values. In
 \code{avtable_import()} character(1) value to use for representing
 \code{NA_character_}. See Details.}
 
@@ -113,7 +113,7 @@ new table with name \code{entity} and entity values
 \code{seq_len(nrow(.data))}.}
 
 \item{delete_empty_values}{logical(1) when \code{TRUE}, remove entities
-not include in \code{.data} from the DATA table. Default: \code{FALSE}.}
+not included in \code{.data} from the DATA table. Default: \code{FALSE}.}
 
 \item{n}{numeric(1) maximum number of rows to return}
 
@@ -170,7 +170,7 @@ Treatment of missing values in \code{avtable()},
 \code{na} parameter.
 
 \code{avtable()} may sometimes result in a curl error 'Error in
-curl::curl_fetch_memory' or a 'Internal Server Error (HTTP
+curl::curl_fetch_memory' or an 'Internal Server Error (HTTP
 500)' This may be due to a server time-out when trying to read
 a large (more than 50,000 rows?) table; using \code{avtable_paged()}
 may address this problem.
@@ -184,11 +184,11 @@ For \code{avtable_import()}, the default \code{na = "NA"} records
 \code{NA_character_} in R as the character string \code{"NA"} in an AnVIL
 data table.
 
-The default setting (\code{na = "NA"} in \code{avtable_import()},
-\verb{na = c("",  NA_character_")} in \code{avtable()}, is appropriate to
+The default settings (\code{na = "NA"} in \code{avtable_import()},
+\code{na = c("", "NA")} in \code{avtable()}) are appropriate to
 'round-trip' data from R to AnVIL and back when character vectors
 contain only \code{NA_character_}. Use \code{na = "NA"} in both functions to
-round-trip data containing both \code{NA_character_} and "NA". Use
+round-trip data containing both \code{NA_character_} and \code{""}. Use
 a distinct string, e.g., \code{na = "__MISSING_VALUE__"}, for both
 arguments if the data contains a string \code{"NA"} as well as
 \code{NA_character_}.
@@ -211,7 +211,9 @@ Write operations (\code{avtable_import()}, \code{avtable_import_set()},
 \code{avtable_delete()}, and \code{avtable_delete_values()}) first check
 that the user has write access (\code{WRITER}, \code{OWNER}, or
 \code{PROJECT_OWNER}) to the workspace, and stop with an informative
-error otherwise.
+error otherwise. A successful check is remembered for the rest
+of the R session.
+
 Re-importing values identical to those already in the
 table (no entity changes) is reported by Terra as a failed job;
 \code{avtable_import_status()} shows status \code{"Error"} with message

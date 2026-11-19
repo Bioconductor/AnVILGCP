@@ -128,7 +128,7 @@ setMethod("avtables", signature = c(platform = "gcp"), definition =
 #' @param table character(1) table name as returned by, e.g., `avtables()`.
 #'
 #' @param na in `avtable()` and `avtable_paged()`, character() of
-#'     strings to be interpretted as missing values. In
+#'     strings to be interpreted as missing values. In
 #'     `avtable_import()` character(1) value to use for representing
 #'     `NA_character_`. See Details.
 #'
@@ -137,7 +137,7 @@ setMethod("avtables", signature = c(platform = "gcp"), definition =
 #'     `na` parameter.
 #'
 #' @details `avtable()` may sometimes result in a curl error 'Error in
-#'     curl::curl_fetch_memory' or a 'Internal Server Error (HTTP
+#'     curl::curl_fetch_memory' or an 'Internal Server Error (HTTP
 #'     500)' This may be due to a server time-out when trying to read
 #'     a large (more than 50,000 rows?) table; using `avtable_paged()`
 #'     may address this problem.
@@ -152,11 +152,11 @@ setMethod("avtables", signature = c(platform = "gcp"), definition =
 #'     `NA_character_` in R as the character string `"NA"` in an AnVIL
 #'     data table.
 #'
-#' @details The default setting (`na = "NA"` in `avtable_import()`,
-#'     `na = c("",  NA_character_")` in `avtable()`, is appropriate to
+#' @details The default settings (`na = "NA"` in `avtable_import()`,
+#'     `na = c("", "NA")` in `avtable()`) are appropriate to
 #'     'round-trip' data from R to AnVIL and back when character vectors
 #'     contain only `NA_character_`. Use `na = "NA"` in both functions to
-#'     round-trip data containing both `NA_character_` and "NA". Use
+#'     round-trip data containing both `NA_character_` and `""`. Use
 #'     a distinct string, e.g., `na = "__MISSING_VALUE__"`, for both
 #'     arguments if the data contains a string `"NA"` as well as
 #'     `NA_character_`.
@@ -367,7 +367,7 @@ setMethod("avtable", signature = c(platform = "gcp"), definition =
 #'     `seq_len(nrow(.data))`.
 #'
 #' @param delete_empty_values logical(1) when `TRUE`, remove entities
-#'     not include in `.data` from the DATA table. Default: `FALSE`.
+#'     not included in `.data` from the DATA table. Default: `FALSE`.
 #'
 #' @details `avtable_import()` tries to work around limitations in
 #'     `.data` size in the AnVIL platform, using `pageSize` (number of
@@ -387,8 +387,10 @@ setMethod("avtable", signature = c(platform = "gcp"), definition =
 #'     `avtable_delete()`, and `avtable_delete_values()`) first check
 #'     that the user has write access (`WRITER`, `OWNER`, or
 #'     `PROJECT_OWNER`) to the workspace, and stop with an informative
-#'     error otherwise.
-#'     Re-importing values identical to those already in the
+#'     error otherwise. A successful check is remembered for the rest
+#'     of the R session.
+#'
+#' @details Re-importing values identical to those already in the
 #'     table (no entity changes) is reported by Terra as a failed job;
 #'     `avtable_import_status()` shows status `"Error"` with message
 #'     'All entities failed to update. There were 0 errors in total.'

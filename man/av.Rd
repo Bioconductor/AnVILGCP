@@ -105,7 +105,7 @@ by, e.g., \code{avworkspace_namespace()}}
 \code{avworkspace_name()}.}
 
 \item{na}{in \code{avtable()} and \code{avtable_paged()}, character() of
-strings to be interpretted as missing values. In
+strings to be interpreted as missing values. In
 \code{avtable_import()} character(1) value to use for representing
 \code{NA_character_}. See Details.}
 
