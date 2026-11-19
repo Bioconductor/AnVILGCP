@@ -39,7 +39,8 @@
 #'         as_tibble(rownames = "model_id") |>
 #'         mutate(model_id = gsub(" ", "-", model_id))
 #'
-#'     avworkspace("waldronlab-terra/mramos-wlab-gcp-0")
+#'     ## set a workspace with write access to import the table
+#'     avworkspace("waldronlab-terra/mramos-wlab-bioc-0")
 #'
 #'     avstatus <- avtable_import(mtcars_tbl)
 #'
