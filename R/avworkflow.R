@@ -560,6 +560,9 @@ avworkflow_run <-
     }
 
     checkInstalled("AnVIL")
+    .avworkspace_stop_if_not_writable(
+        namespace, name, "avworkflow_run", compute = TRUE
+    )
     run_workflow <- AnVIL::Rawls()$createSubmission(
         workspaceNamespace = namespace,
         workspaceName = URLencode(name),
@@ -629,6 +632,7 @@ avworkflow_stop <-
     }
 
     checkInstalled("AnVIL")
+    .avworkspace_stop_if_not_writable(namespace, name, "avworkflow_stop")
     terra <- AnVIL::Terra()
 
     ## only change status of submitted / running workflows. In

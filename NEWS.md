@@ -2,6 +2,14 @@
 
 ### Bug fixes and minor improvements
 
+* Workspace write operations (`avtable_import()`, `avtable_import_set()`,
+  `avtable_delete()`, `avtable_delete_values()`, `avdata_import()`,
+  `avworkflow_run()`, `avworkflow_stop()`, and
+  `avworkflow_configuration_set()`) check the user's workspace access level
+  and report an informative error instead of e.g., a generic HTTP 500 error
+  when write (or compute) permission is lacking (#10).
+* Use `all_of()` in `avtable_import_set()` to avoid a `tidyselect`
+  deprecation warning.
 * `avtable_import_status()` warnings explain that Terra reports
   re-importing values identical to the existing table as an `"Error"`
   ('All entities failed to update. There were 0 errors in total.';

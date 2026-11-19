@@ -383,7 +383,12 @@ setMethod("avtable", signature = c(platform = "gcp"), definition =
 #'     provide an explicit `pageSize` less than the automatically
 #'     determined size.
 #'
-#' @details Re-importing values identical to those already in the
+#' @details Write operations (`avtable_import()`, `avtable_import_set()`,
+#'     `avtable_delete()`, and `avtable_delete_values()`) first check
+#'     that the user has write access (`WRITER`, `OWNER`, or
+#'     `PROJECT_OWNER`) to the workspace, and stop with an informative
+#'     error otherwise.
+#'     Re-importing values identical to those already in the
 #'     table (no entity changes) is reported by Terra as a failed job;
 #'     `avtable_import_status()` shows status `"Error"` with message
 #'     'All entities failed to update. There were 0 errors in total.'
@@ -422,6 +427,7 @@ setMethod(
         ## identify the 'entity' column
         .data <- .avtable_import_set_entity(.data, entity)
         checkInstalled("AnVIL")
+        .avworkspace_stop_if_not_writable(namespace, name, "avtable_import")
         ## divide large tables into chunks, if necessary
         .avtable_import_chunks(
             .data, namespace, name, delete_empty_values, na,
@@ -456,6 +462,7 @@ setMethod(
 #'     imported AnVIL tibble.
 #'
 #' @importFrom utils write.table
+#' @importFrom dplyr all_of
 #'
 #' @examples
 #' library(AnVILBase)
@@ -499,11 +506,14 @@ setMethod("avtable_import_set", signature = c(platform = "gcp"), definition =
 
         .data <-
             .data |>
-            select(set, member)
+            select(all_of(c(set, member)))
         names(.data)[[1]] <- paste0("membership:", origin, "_set_id")
         names(.data)[[2]] <- origin
 
         checkInstalled("AnVIL")
+        .avworkspace_stop_if_not_writable(
+            namespace, name, "avtable_import_set"
+        )
         .avtable_import_chunks(
             .data, namespace, name, delete_empty_values, na,
             n, page, pageSize
@@ -538,6 +548,7 @@ setMethod(
         )
         table <- URLencode(table)
         checkInstalled("AnVIL")
+        .avworkspace_stop_if_not_writable(namespace, name, "avtable_delete")
         response <- AnVIL::Rawls()$deleteEntitiesOfType(
             namespace, URLencode(name), table
         )
@@ -578,6 +589,9 @@ setMethod("avtable_delete_values", signature = c(platform = "gcp"),
         body <- tibble(entityType = table, entityName = as.character(values))
 
         checkInstalled("AnVIL")
+        .avworkspace_stop_if_not_writable(
+            namespace, name, "avtable_delete_values"
+        )
         response <- AnVIL::Terra()$deleteEntities(
             namespace, URLencode(name), body
         )

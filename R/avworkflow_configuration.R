@@ -413,6 +413,9 @@ avworkflow_configuration_set <-
         return(invisible(config))
     }
 
+    .avworkspace_stop_if_not_writable(
+        namespace, name, "avworkflow_configuration_set"
+    )
     response <- rawls$update_method_configuration(
         namespace, URLencode(name), config$namespace, config$name,
         .__body__ = config

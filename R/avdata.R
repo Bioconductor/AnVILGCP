@@ -156,6 +156,7 @@ avdata_import <- function(
     ## upload the table to AnVIL
     entities <- httr::upload_file(destination)
     checkInstalled("AnVIL")
+    .avworkspace_stop_if_not_writable(namespace, name, "avdata_import")
     response <- AnVIL::Terra()$importAttributesTSV(
         namespace, URLencode(name), entities
     )

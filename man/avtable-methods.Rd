@@ -207,6 +207,11 @@ argument. If many pages fail to import, a strategy might be to
 provide an explicit \code{pageSize} less than the automatically
 determined size.
 
+Write operations (\code{avtable_import()}, \code{avtable_import_set()},
+\code{avtable_delete()}, and \code{avtable_delete_values()}) first check
+that the user has write access (\code{WRITER}, \code{OWNER}, or
+\code{PROJECT_OWNER}) to the workspace, and stop with an informative
+error otherwise.
 Re-importing values identical to those already in the
 table (no entity changes) is reported by Terra as a failed job;
 \code{avtable_import_status()} shows status \code{"Error"} with message
