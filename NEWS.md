@@ -2,6 +2,13 @@
 
 ### Bug fixes and minor improvements
 
+* `avtable_import()` supports list columns, e.g., `tibble(id = 1, cohorts =
+  list(c("A", "B")))`; elements are uploaded as JSON arrays, which AnVIL
+  imports as list attributes (#5, @smgogarten)
+* New `avtable_nest()` reshapes list attributes returned by `avtable()`
+  (`<name>.items` and `<name>.itemsType` columns) or `avtable_paged()` into
+  list columns named as in the workspace DATA tab; `avtable()` output is
+  unchanged
 * Workspace write operations (`avtable_import()`, `avtable_import_set()`,
   `avtable_delete()`, `avtable_delete_values()`, `avdata_import()`,
   `avworkflow_run()`, `avworkflow_stop()`, and

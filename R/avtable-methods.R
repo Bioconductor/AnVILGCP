@@ -220,6 +220,91 @@ setMethod("avtable", signature = c(platform = "gcp"), definition =
     }
 )
 
+# avtable_nest ------------------------------------------------------------
+
+## one list attribute: 'items' values and 'itemsType' to an R list
+.avtable_nest_items <-
+    function(items, itemsType)
+{
+    lapply(seq_along(items), function(i) {
+        value <- items[[i]]
+        if (identical(itemsType[[i]], "EntityReference")) {
+            if (is.data.frame(value)) {
+                value <- value[["entityName"]]
+            } else if (is.list(value)) {
+                value <- vapply(
+                    value, function(x) x[["entityName"]], character(1L)
+                )
+            }
+            if (is.null(value))
+                value <- character()
+        }
+        value
+    })
+}
+
+#' @rdname avtable-methods
+#'
+#' @description `avtable_nest()` reshapes the list attributes in a
+#'     table returned by `avtable()` or `avtable_paged()` into list
+#'     columns named as in the AnVIL workspace DATA tab.
+#'
+#' @param .tbl a `tibble` as returned by `avtable()` or
+#'     `avtable_paged()`.
+#'
+#' @details `avtable()` returns each AnVIL list attribute `<name>` as
+#'     two columns, `<name>.items` and `<name>.itemsType`;
+#'     `avtable_paged()` returns it as a column `<name>` containing a
+#'     `data.frame` with `items` and `itemsType`. `avtable_nest()`
+#'     replaces these with a single list column `<name>`, as shown in
+#'     the workspace. Values of entity reference lists (e.g., set
+#'     membership) are represented by their entity names. Other
+#'     columns are unchanged.
+#'
+#' @return `avtable_nest()` returns a `tibble` with one list column for
+#'     each list attribute.
+#'
+#' @examples
+#' tbl <- tibble::tibble(
+#'     sample_id = c("s1", "s2"),
+#'     cohorts.itemsType = "AttributeValue",
+#'     cohorts.items = list(c("A", "B"), "C")
+#' )
+#' avtable_nest(tbl)
+#'
+#' @export
+avtable_nest <-
+    function(.tbl)
+{
+    stopifnot(is.data.frame(.tbl))
+
+    ## avtable(): '<name>.items' and '<name>.itemsType' columns
+    items_cols <- grep("\\.items$", names(.tbl), value = TRUE)
+    bases <- sub("\\.items$", "", items_cols)
+    type_cols <- paste0(bases, ".itemsType")
+    keep <- type_cols %in% names(.tbl) & !bases %in% names(.tbl)
+    for (i in which(keep)) {
+        .tbl[[items_cols[[i]]]] <- .avtable_nest_items(
+            .tbl[[items_cols[[i]]]], .tbl[[type_cols[[i]]]]
+        )
+        names(.tbl)[names(.tbl) == items_cols[[i]]] <- bases[[i]]
+    }
+    .tbl <- .tbl[setdiff(names(.tbl), type_cols[keep])]
+
+    ## avtable_paged(): '<name>' data.frame column of items, itemsType
+    is_nested <- vapply(.tbl, function(column) {
+        is.data.frame(column) &&
+            all(c("items", "itemsType") %in% names(column))
+    }, logical(1L))
+    for (column in names(.tbl)[is_nested]) {
+        .tbl[[column]] <- .avtable_nest_items(
+            .tbl[[column]][["items"]], .tbl[[column]][["itemsType"]]
+        )
+    }
+
+    .tbl
+}
+
 .avtable_import_set_entity <-
     function(.data, entity)
 {
@@ -240,6 +325,50 @@ setMethod("avtable", signature = c(platform = "gcp"), definition =
     stopifnot(!anyDuplicated(.data[[entity]]), !anyNA(.data[[entity]]))
 
     .data[c(entity, setdiff(names(.data), entity))]
+}
+
+## encode list columns as JSON arrays, which Terra's TSV import
+## recognizes as list attributes; see
+## https://support.terra.bio/hc/en-us/articles/6624394629147
+.avtable_import_list_element <-
+    function(x, column, row)
+{
+    if (is.factor(x))
+        x <- as.character(x)
+    if (!is.null(x) && !(is.atomic(x) && is.null(dim(x)))) {
+        stop(
+            "list column '", column, "' row ", row, " must contain an ",
+            "atomic vector; nested lists and other types are not supported",
+            call. = FALSE
+        )
+    }
+    if (anyNA(x)) {
+        stop(
+            "list column '", column, "' row ", row, " contains NA; ",
+            "AnVIL list attributes cannot contain missing values",
+            call. = FALSE
+        )
+    }
+    if (!length(x))
+        return("[]")
+    as.character(jsonlite::toJSON(unname(x), auto_unbox = FALSE, digits = NA))
+}
+
+.avtable_import_list_columns <-
+    function(.data)
+{
+    is_list <- vapply(.data, is.list, logical(1L))
+    for (column in names(.data)[is_list]) {
+        values <- .data[[column]]
+        .data[[column]] <- vapply(
+            seq_along(values),
+            function(row) .avtable_import_list_element(
+                values[[row]], column, row
+            ),
+            character(1L)
+        )
+    }
+    .data
 }
 
 .avtable_import_write_dataset <-
@@ -383,6 +512,15 @@ setMethod("avtable", signature = c(platform = "gcp"), definition =
 #'     provide an explicit `pageSize` less than the automatically
 #'     determined size.
 #'
+#' @details List columns in `.data`, e.g., `tibble(id = 1, cohorts =
+#'     list(c("A", "B")))`, are imported as AnVIL list attributes.
+#'     Each element must be an atomic vector (character, numeric,
+#'     integer, logical, or factor) without `NA` values; elements are
+#'     encoded as JSON arrays (e.g., `["A","B"]`) in the uploaded TSV.
+#'     `avtable()` returns list attributes as two columns,
+#'     `<name>.items` (a list column of the values) and
+#'     `<name>.itemsType`.
+#'
 #' @details Write operations (`avtable_import()`, `avtable_import_set()`,
 #'     `avtable_delete()`, and `avtable_delete_values()`) first check
 #'     that the user has write access (`WRITER`, `OWNER`, or
@@ -428,6 +566,8 @@ setMethod(
 
         ## identify the 'entity' column
         .data <- .avtable_import_set_entity(.data, entity)
+        ## encode list columns as JSON arrays
+        .data <- .avtable_import_list_columns(.data)
         checkInstalled("AnVIL")
         .avworkspace_stop_if_not_writable(namespace, name, "avtable_import")
         ## divide large tables into chunks, if necessary

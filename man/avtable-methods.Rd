@@ -9,6 +9,7 @@
 \alias{avtable_delete_values}
 \alias{avtables,gcp-method}
 \alias{avtable,gcp-method}
+\alias{avtable_nest}
 \alias{avtable_import,gcp-method}
 \alias{avtable_import_set,gcp-method}
 \alias{avtable_delete,gcp-method}
@@ -30,6 +31,8 @@
   ...,
   platform = cloud_platform()
 )
+
+avtable_nest(.tbl)
 
 \S4method{avtable_import}{gcp}(
   .data,
@@ -99,6 +102,9 @@ strings to be interpreted as missing values. In
 \code{avtable_import()} character(1) value to use for representing
 \code{NA_character_}. See Details.}
 
+\item{.tbl}{a \code{tibble} as returned by \code{avtable()} or
+\code{avtable_paged()}.}
+
 \item{.data}{A tibble or data.frame for import as an AnVIL table.}
 
 \item{entity}{\code{character(1)} column name of \code{.data} to be used as
@@ -145,6 +151,9 @@ the number of records, and the column names.
 \code{avtable()}: a tibble of data corresponding to the AnVIL
 table \code{table} in the specified workspace.
 
+\code{avtable_nest()} returns a \code{tibble} with one list column for
+each list attribute.
+
 \code{avtable_import_set()} returns a \code{character(1)} name of the
 imported AnVIL tibble.
 
@@ -163,6 +172,10 @@ imports a data.frame to an AnVIL table.  \code{avtable_import_set()}
 imports set membership (i.e., a subset of an existing table)
 information to an AnVIL table.  \code{avtable_delete_values()}
 removes rows from an AnVIL table.
+
+\code{avtable_nest()} reshapes the list attributes in a
+table returned by \code{avtable()} or \code{avtable_paged()} into list
+columns named as in the AnVIL workspace DATA tab.
 }
 \details{
 Treatment of missing values in \code{avtable()},
@@ -193,6 +206,15 @@ a distinct string, e.g., \code{na = "__MISSING_VALUE__"}, for both
 arguments if the data contains a string \code{"NA"} as well as
 \code{NA_character_}.
 
+\code{avtable()} returns each AnVIL list attribute \verb{<name>} as
+two columns, \verb{<name>.items} and \verb{<name>.itemsType};
+\code{avtable_paged()} returns it as a column \verb{<name>} containing a
+\code{data.frame} with \code{items} and \code{itemsType}. \code{avtable_nest()}
+replaces these with a single list column \verb{<name>}, as shown in
+the workspace. Values of entity reference lists (e.g., set
+membership) are represented by their entity names. Other
+columns are unchanged.
+
 \code{avtable_import()} tries to work around limitations in
 \code{.data} size in the AnVIL platform, using \code{pageSize} (number of
 rows) to import so that approximately 1500000 elements (rows x
@@ -206,6 +228,14 @@ user can attempt to import these individually using the \code{page}
 argument. If many pages fail to import, a strategy might be to
 provide an explicit \code{pageSize} less than the automatically
 determined size.
+
+List columns in \code{.data}, e.g., \code{tibble(id = 1, cohorts = list(c("A", "B")))}, are imported as AnVIL list attributes.
+Each element must be an atomic vector (character, numeric,
+integer, logical, or factor) without \code{NA} values; elements are
+encoded as JSON arrays (e.g., \verb{["A","B"]}) in the uploaded TSV.
+\code{avtable()} returns list attributes as two columns,
+\verb{<name>.items} (a list column of the values) and
+\verb{<name>.itemsType}.
 
 Write operations (\code{avtable_import()}, \code{avtable_import_set()},
 \code{avtable_delete()}, and \code{avtable_delete_values()}) first check
@@ -283,6 +313,13 @@ if (interactive()) {
         avtable_import_set("model", "cyl", "model_id")
 
 }
+tbl <- tibble::tibble(
+    sample_id = c("s1", "s2"),
+    cohorts.itemsType = "AttributeValue",
+    cohorts.items = list(c("A", "B"), "C")
+)
+avtable_nest(tbl)
+
 library(AnVILBase)
 if (has_avworkspace(platform = gcp()) && interactive()) {
 ## editable copy of '1000G-high-coverage-2019' workspace
