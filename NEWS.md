@@ -15,6 +15,9 @@
 
 ### Bug fixes and minor improvements
 
+* Remove internal `gcloud` SDK helpers and the `print.gcloud_sdk_result()`
+  method duplicated from `GCPtools`, avoiding the 'Registered S3 method
+  overwritten' message when both packages are loaded.
 * Workspace write operations (`avtable_import()`, `avtable_import_set()`,
   `avtable_delete()`, `avtable_delete_values()`, `avdata_import()`,
   `avworkflow_run()`, `avworkflow_stop()`, and
