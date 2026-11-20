@@ -13,6 +13,13 @@
   list columns named as in the workspace DATA tab; `avtable()` output is
   unchanged
 
+### Significant user-visible changes
+
+* `drs_hub()` gains a `user_project` argument, sent to DRS Hub as
+  `userProject` for requester-pays access. It defaults to the
+  `GOOGLE_PROJECT` environment variable or `gcloud_project()`. AnVIL TDR
+  snapshots with `requireUserProject` enabled fail to resolve without it
+
 ### Bug fixes and minor improvements
 
 * Remove internal `gcloud` SDK helpers and the `print.gcloud_sdk_result()`
