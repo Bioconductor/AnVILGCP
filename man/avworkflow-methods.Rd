@@ -37,12 +37,39 @@ workspaces on AnVIL.}
 'Submitting' 'Submitted' 'Aborting' 'Aborted' 'Done'
 \item succeeded integer() number of workflows succeeding.
 \item failed integer() number of workflows failing.
+\item submissionRoot character() cloud storage path of the submission
+outputs.
+\item namespace character() AnVIL workspace namespace.
+\item name character() AnVIL workspace name.
+\item methodConfigurationNamespace character() namespace of the workflow
+(method configuration) submitted, as used by the
+\code{workflow_namespace} argument of \code{avworkflow_configuration_get()}.
+\item methodConfigurationName character() name of the workflow submitted,
+as used by the \code{workflow_name} argument of
+\code{avworkflow_configuration_get()}.
 }
 }
 \description{
 Methods for working with AnVIL workflow execution.
 \code{avworkflow_jobs()} returns a tibble summarizing submitted workflow jobs for
 a namespace and name.
+}
+\details{
+Use the \code{methodConfigurationNamespace} and
+\code{methodConfigurationName} columns to find jobs for a particular
+workflow, e.g., the most recent successful submission:
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{avworkflow_jobs() |>
+    dplyr::filter(
+        methodConfigurationName == "my_workflow",
+        status == "Done", succeeded > 0, failed == 0
+    ) |>
+    head(1)
+}\if{html}{\out{</div>}}
+
+The \code{methodConfigurationName} is the workflow name shown in the
+workspace WORKFLOWS tab; it may differ from the \code{workflowName}
+(WDL workflow name) reported by \code{avworkflow_info()}.
 }
 \section{Functions}{
 \itemize{

@@ -1,5 +1,11 @@
 ## Changes in version 1.8.0
 
+### New features
+
+* `avworkflow_jobs()` includes `methodConfigurationNamespace` and
+  `methodConfigurationName` columns identifying the workflow submitted;
+  the new columns follow the existing ones (#4, @amstilp)
+
 ### Bug fixes and minor improvements
 
 * `avtable_import()` supports list columns, e.g., `tibble(id = 1, cohorts =

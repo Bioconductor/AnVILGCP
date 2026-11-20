@@ -15,8 +15,48 @@
         status = x[["status"]],
         succeeded = succeeded,
         failed = failed,
-        submissionRoot = x[["submissionRoot"]]
+        submissionRoot = x[["submissionRoot"]],
+        methodConfigurationNamespace =
+            x[["methodConfigurationNamespace"]] %||% NA_character_,
+        methodConfigurationName =
+            x[["methodConfigurationName"]] %||% NA_character_
     )
+}
+
+## columns added after the original columns, so positional use of
+## earlier columns is unchanged
+.AVWORKFLOW_JOBS_NEW_COLUMNS <-
+    c("methodConfigurationNamespace", "methodConfigurationName")
+
+.avworkflow_jobs_tbl <-
+    function(submissions, namespace, name)
+{
+    if (length(submissions)) {
+        submissions <- lapply(submissions, .avworkflow_job)
+    } else {
+        submissions <- list(
+            submissionId = character(),
+            submitter = character(),
+            submissionDate = character(),
+            status = character(),
+            succeeded = integer(),
+            failed = integer(),
+            submissionRoot = character(),
+            methodConfigurationNamespace = character(),
+            methodConfigurationName = character()
+        )
+    }
+
+    bind_rows(submissions) |>
+        mutate(
+            submissionDate = .POSIXct(as.numeric(
+                as.POSIXct(.data$submissionDate, "%FT%T", tz="UTC")
+            )),
+            namespace = namespace,
+            name = name
+        ) |>
+        relocate(all_of(.AVWORKFLOW_JOBS_NEW_COLUMNS), .after = "name") |>
+        arrange(desc(.data$submissionDate))
 }
 
 #' @name avworkflow-methods
@@ -39,6 +79,33 @@
 #'   'Submitting' 'Submitted' 'Aborting' 'Aborted' 'Done'
 #' - succeeded integer() number of workflows succeeding.
 #' - failed integer() number of workflows failing.
+#' - submissionRoot character() cloud storage path of the submission
+#'   outputs.
+#' - namespace character() AnVIL workspace namespace.
+#' - name character() AnVIL workspace name.
+#' - methodConfigurationNamespace character() namespace of the workflow
+#'   (method configuration) submitted, as used by the
+#'   `workflow_namespace` argument of `avworkflow_configuration_get()`.
+#' - methodConfigurationName character() name of the workflow submitted,
+#'   as used by the `workflow_name` argument of
+#'   `avworkflow_configuration_get()`.
+#'
+#' @details Use the `methodConfigurationNamespace` and
+#'   `methodConfigurationName` columns to find jobs for a particular
+#'   workflow, e.g., the most recent successful submission:
+#'
+#' ```
+#' avworkflow_jobs() |>
+#'     dplyr::filter(
+#'         methodConfigurationName == "my_workflow",
+#'         status == "Done", succeeded > 0, failed == 0
+#'     ) |>
+#'     head(1)
+#' ```
+#'
+#' The `methodConfigurationName` is the workflow name shown in the
+#' workspace WORKFLOWS tab; it may differ from the `workflowName`
+#' (WDL workflow name) reported by `avworkflow_info()`.
 #'
 #' @examples
 #' library(AnVILBase)
@@ -49,7 +116,7 @@ NULL
 
 #' @describeIn avworkflow-methods List workflow jobs in the workspace
 #'
-#' @importFrom dplyr bind_rows mutate desc
+#' @importFrom dplyr bind_rows mutate desc relocate all_of
 #' @importFrom AnVILBase avworkflow_jobs avstop_for_status
 #'
 #' @exportMethod avworkflow_jobs
@@ -70,28 +137,6 @@ setMethod("avworkflow_jobs", signature = c(platform = "gcp"), definition =
         avstop_for_status(response, "avworkflow_jobs")
 
         submissions <- content(response, encoding = "UTF-8")
-        if (length(submissions)) {
-            submissions <- lapply(submissions, .avworkflow_job)
-        } else {
-            submissions <- list(
-                submissionId = character(),
-                submitter = character(),
-                submissionDate = character(),
-                status = character(),
-                succeeded = integer(),
-                failed = integer(),
-                submissionRoot = character()
-            )
-        }
-
-        bind_rows(submissions) |>
-            mutate(
-                submissionDate = .POSIXct(as.numeric(
-                    as.POSIXct(.data$submissionDate, "%FT%T", tz="UTC")
-                )),
-                namespace = namespace,
-                name = name
-            ) |>
-            arrange(desc(.data$submissionDate))
+        .avworkflow_jobs_tbl(submissions, namespace, name)
     }
 )
