@@ -13,6 +13,14 @@
   list columns named as in the workspace DATA tab; `avtable()` output is
   unchanged
 
+### Significant user-visible changes
+
+* `avcopy()` no longer silently overwrites existing local files. When a
+  copy from a bucket would replace local files, interactive sessions ask
+  for confirmation and non-interactive sessions stop with an error; use
+  `overwrite = TRUE` to replace files without asking. `avfiles_restore()`
+  gains the same `overwrite` argument (#7, @amstilp)
+
 ### Bug fixes and minor improvements
 
 * Remove internal `gcloud` SDK helpers and the `print.gcloud_sdk_result()`

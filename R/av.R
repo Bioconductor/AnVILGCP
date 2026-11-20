@@ -393,6 +393,11 @@ avfiles_backup <-
 #' @details `avfiles_restore()` behaves in a manner analogous to
 #'     `avfiles_backup()`, copying files from the workspace bucket to
 #'     the compute node file system.
+#'     Existing local files are not replaced unless `overwrite = TRUE`;
+#'     see `?avcopy`.
+#'
+#' @param overwrite logical(1) for `avfiles_restore()`, replace
+#'     existing local files? Default: `FALSE`. See `?avcopy`.
 #'
 #' @export
 avfiles_restore <-
@@ -402,7 +407,8 @@ avfiles_restore <-
         recursive = FALSE,
         parallel = TRUE,
         namespace = avworkspace_namespace(),
-        name = avworkspace_name()
+        name = avworkspace_name(),
+        overwrite = FALSE
     )
 {
     stopifnot(
@@ -411,13 +417,17 @@ avfiles_restore <-
         `'destination' is not a directory` = dir.exists(destination),
         isScalarLogical(recursive),
         isScalarLogical(parallel),
+        isScalarLogical(overwrite),
         isScalarCharacter(namespace),
         isScalarCharacter(name)
     )
 
     bucket <- avstorage(namespace, name)
     source <- .avbucket_path(bucket, source)
-    avcopy(source, destination, recursive = recursive, parallel = parallel)
+    avcopy(
+        source, destination,
+        recursive = recursive, parallel = parallel, overwrite = overwrite
+    )
 }
 
 #' @rdname av

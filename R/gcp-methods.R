@@ -43,6 +43,10 @@
 #' @param parallel `logical(1)`, perform parallel multi-threaded /
 #'   multi-processing (default is `TRUE`).
 #'
+#' @param overwrite `logical(1)`, replace existing local files when
+#'   copying from a bucket to the local file system? Default: `FALSE`.
+#'   See Details.
+#'
 #' @param platform `gcp()` The cloud platform class to dispatch on as given by
 #'   [AnVILBase::cloud_platform]. Typically not set manually as
 #'   `cloud_platform()` returns the `"gcp"` class for Google Cloud Platform
@@ -66,6 +70,17 @@
 #'     source and destination.
 #'
 #' @param ... additional arguments passed as-is to the `gsutil` subcommand.
+#'
+#' @details When `destination` is on the local file system and
+#'   `overwrite = FALSE` (the default), `avcopy()` checks whether the copy
+#'   would replace existing local files: `destination` itself, or, when
+#'   `destination` is a directory, the files (or, with `recursive = TRUE`,
+#'   directories) named by `basename(source)` within it. Wildcards in
+#'   `source` are matched against files in `destination`. If any exist,
+#'   an interactive session asks whether to overwrite them; otherwise,
+#'   or when the answer is not 'yes', `avcopy()` stops with an error
+#'   and copies nothing. Use `overwrite = TRUE` to replace existing files
+#'   without asking.
 #'
 #' @return `avcopy()`: exit status of `avcopy()`, invisibly.
 #'   `avlist()`: `character()` listing of `source` content.
@@ -102,6 +117,62 @@ NULL
 
 # avcopy ------------------------------------------------------------------
 
+## local files that copying 'source' to a local 'destination' would
+## replace; follows 'gsutil cp' naming: a 'destination' directory
+## receives 'basename(source)'
+.avcopy_existing_targets <-
+    function(source, destination)
+{
+    if (GCPtools::gsutil_is_uri(destination))
+        return(character())
+
+    is_dir <- dir.exists(destination) || endsWith(destination, "/")
+    if (!is_dir)
+        return(destination[file.exists(destination)])
+
+    ## 'gs://bucket/dir/' copies to 'destination/dir'
+    names <- basename(sub("/+$", "", source))
+    targets <- file.path(sub("/+$", "", destination), names)
+    has_wildcard <- grepl("[*?[]", names)
+    existing <- c(
+        targets[!has_wildcard][file.exists(targets[!has_wildcard])],
+        Sys.glob(targets[has_wildcard])
+    )
+    unique(existing)
+}
+
+## wrappers to allow mocking in tests
+.avcopy_interactive <- function() interactive()
+
+#' @importFrom utils askYesNo
+.avcopy_ask <- function(msg) askYesNo(msg, default = FALSE)
+
+.avcopy_check_overwrite <-
+    function(existing, overwrite)
+{
+    if (overwrite || !length(existing))
+        return(invisible(TRUE))
+
+    n <- length(existing)
+    shown <- utils::head(existing, 5L)
+    files <- paste0(
+        "  ", paste(shown, collapse = "\n  "),
+        if (n > length(shown)) paste0("\n  ... and ", n - length(shown), " more")
+    )
+    what <- sprintf(
+        "'avcopy()' would overwrite %d existing local file%s:\n%s\n",
+        n, if (n == 1L) "" else "s", files
+    )
+    hint <- "Use 'overwrite = TRUE' to replace existing files without asking."
+
+    if (.avcopy_interactive()) {
+        answer <- .avcopy_ask(paste0(what, hint, "\nOverwrite?"))
+        if (isTRUE(answer))
+            return(invisible(TRUE))
+    }
+    stop(what, "No files were copied. ", hint, call. = FALSE)
+}
+
 #' @describeIn gcp-methods copy contents of `source` to `destination` with
 #'   `gsutil`
 #'
@@ -113,8 +184,16 @@ setMethod(
     definition =  function(
         source, destination,
         ...,
-        recursive = FALSE, parallel = TRUE, platform = cloud_platform()
+        recursive = FALSE, parallel = TRUE, overwrite = FALSE,
+        platform = cloud_platform()
     ) {
+        stopifnot(
+            isCharacter(source), isScalarCharacter(destination),
+            isScalarLogical(overwrite)
+        )
+        existing <- .avcopy_existing_targets(source, destination)
+        .avcopy_check_overwrite(existing, overwrite)
+
         GCPtools::gsutil_cp(
             source = source, destination = destination,
             ...,

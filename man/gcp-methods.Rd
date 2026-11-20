@@ -22,6 +22,7 @@
   ...,
   recursive = FALSE,
   parallel = TRUE,
+  overwrite = FALSE,
   platform = cloud_platform()
 )
 
@@ -88,6 +89,10 @@ Default: \code{FALSE}.}
 \item{parallel}{\code{logical(1)}, perform parallel multi-threaded /
 multi-processing (default is \code{TRUE}).}
 
+\item{overwrite}{\code{logical(1)}, replace existing local files when
+copying from a bucket to the local file system? Default: \code{FALSE}.
+See Details.}
+
 \item{platform}{\code{gcp()} The cloud platform class to dispatch on as given by
 \link[AnVILBase:cloud_platform]{AnVILBase::cloud_platform}. Typically not set manually as
 \code{cloud_platform()} returns the \code{"gcp"} class for Google Cloud Platform
@@ -153,6 +158,17 @@ uploaded 'chunks', and any (error) messages generated during status check.
 Use \code{avtable_import_status()} to query current status.
 }
 \details{
+When \code{destination} is on the local file system and
+\code{overwrite = FALSE} (the default), \code{avcopy()} checks whether the copy
+would replace existing local files: \code{destination} itself, or, when
+\code{destination} is a directory, the files (or, with \code{recursive = TRUE},
+directories) named by \code{basename(source)} within it. Wildcards in
+\code{source} are matched against files in \code{destination}. If any exist,
+an interactive session asks whether to overwrite them; otherwise,
+or when the answer is not 'yes', \code{avcopy()} stops with an error
+and copies nothing. Use \code{overwrite = TRUE} to replace existing files
+without asking.
+
 \verb{avbackup()': To make }"gs://mybucket/data"\verb{match the contents of the local directory}"data"` you could do:
 
 \code{avbackup("data", "gs://mybucket/data", delete = TRUE)}

@@ -56,7 +56,8 @@ avfiles_restore(
   recursive = FALSE,
   parallel = TRUE,
   namespace = avworkspace_namespace(),
-  name = avworkspace_name()
+  name = avworkspace_name(),
+  overwrite = FALSE
 )
 
 avfiles_rm(
@@ -128,6 +129,9 @@ workspace bucket.}
 
 \item{parallel}{logical(1) backup files using parallel transfer?
 See \code{?avcopy()}.}
+
+\item{overwrite}{logical(1) for \code{avfiles_restore()}, replace
+existing local files? Default: \code{FALSE}. See \code{?avcopy}.}
 
 \item{project}{\code{character(1)} project (billing account) name, as
 returned by, e.g., \code{gcloud_project()} or
@@ -227,6 +231,8 @@ full.names = TRUE))\verb{.  Naming conventions are described in detail in }gsuti
 \code{avfiles_restore()} behaves in a manner analogous to
 \code{avfiles_backup()}, copying files from the workspace bucket to
 the compute node file system.
+Existing local files are not replaced unless \code{overwrite = TRUE};
+see \code{?avcopy}.
 }
 \examples{
 library(AnVILBase)
