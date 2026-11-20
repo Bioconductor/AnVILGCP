@@ -1,6 +1,6 @@
 Package: AnVILGCP
 Title: The GCP R Client for the AnVIL
-Version: 1.7.5
+Version: 1.7.6
 Date: 2026-05-22
 Authors@R: c(
     person("Marcel", "Ramos", , "marcel.ramos@sph.cuny.edu",
