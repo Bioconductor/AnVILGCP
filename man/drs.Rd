@@ -6,13 +6,21 @@
 \alias{drs_nci_crdc}
 \title{DRS (Data Repository Service) URL management}
 \usage{
-drs_hub(source = character())
+drs_hub(source = character(), user_project = .drs_user_project())
 
 drs_nci_crdc(source = character())
 }
 \arguments{
 \item{source}{\code{character()} DRS URLs (beginning with 'drs://') to resources
 managed by the DRS Hub server (\code{drs_hub()}).}
+
+\item{user_project}{\code{character(1)} Google project billed for access to
+requester-pays data, sent to DRS Hub as \code{userProject}. Resolution fails
+without it for AnVIL TDR snapshots with \code{requireUserProject} enabled;
+other DRS objects resolve without it. Defaults to the \code{GOOGLE_PROJECT}
+environment variable (set in Terra workspaces) or, failing that,
+\code{gcloud_project()}; when neither is available, \code{userProject} is omitted
+from the request.}
 }
 \value{
 \code{drs_hub()} returns a tbl with the following columns:
